@@ -3,85 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Special Surprise</title>
+    <title>Special Gift</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #050810; overflow: hidden; color: #fff; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
-        #intro-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #050810; z-index: 200; display: flex; justify-content: center; align-items: center; transition: opacity 1s; }
-        #intro-btn { background: none; border: 2px solid #38bdf8; color: #38bdf8; padding: 15px 40px; font-size: 18px; border-radius: 50px; cursor: pointer; }
-        .container { width: 85%; max-width: 420px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px; text-align: center; z-index: 10; display: none; opacity: 0; transition: 1s; }
-        .show-box { display: block !important; opacity: 1 !important; }
-        .profile-img { width: 120px; height: 120px; border-radius: 50%; margin-bottom: 15px; border: 3px solid #38bdf8; object-fit: cover; }
-        #typing-text { font-size: 18px; margin-bottom: 20px; min-height: 50px; line-height: 1.6; }
-        textarea { width: 100%; height: 100px; background: rgba(0,0,0,0.2); color: #fff; border-radius: 10px; padding: 10px; border: 1px solid #38bdf8; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 15px; border-radius: 50px; border: none; background: #38bdf8; color: #000; font-weight: bold; cursor: pointer; }
-        #heart-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        .heart { position: absolute; font-size: 20px; animation: fall 5s linear infinite; }
-        @keyframes fall { 0% { transform: translateY(-10vh); } 100% { transform: translateY(110vh); } }
+        body { margin: 0; background: #050810; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        #intro-page { position: fixed; width: 100%; height: 100%; background: #050810; display: flex; justify-content: center; align-items: center; z-index: 100; }
+        #intro-btn { background: #38bdf8; color: black; border: none; padding: 15px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; }
+        .container { text-align: center; display: none; padding: 20px; }
+        .profile-img { width: 150px; height: 150px; border-radius: 50%; border: 3px solid #38bdf8; margin-bottom: 20px; }
+        textarea { width: 280px; height: 100px; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+        #magic-btn { background: #818cf8; border: none; padding: 10px 20px; border-radius: 20px; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="intro-page"><button id="intro-btn" onclick="startMagic()">OPEN YOUR GIFT 🎁</button></div>
-    <div id="heart-container"></div>
-    <div class="container" id="mainContainer">
-        <img src="photo.jpg" class="profile-img">
-        <h2 id="title">FOR YOU... 🥺</h2>
-        <div id="typing-text"></div>
-        <textarea id="textInput" placeholder="پیام آشتی رو اینجا بنویس..."></textarea>
-        <button id="mainBtn" class="btn" onclick="process()">CREATE MAGIC LINK ✨</button>
-        <div id="linkOutput" style="display:none; margin-top:15px; word-break:break-all; font-size:10px; color:#38bdf8;"></div>
-    </div>
-    <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
 
-    <script>
-        let fullText = ""; let index = 0;
-        const hash = window.location.hash.substring(1);
+<div id="intro-page">
+    <button id="intro-btn" onclick="start()">OPEN YOUR GIFT 🎁</button>
+</div>
+
+<div class="container" id="mainBox">
+    <img src="photo.jpg" class="profile-img">
+    <div id="textDisplay" style="font-size: 20px; margin-bottom: 20px;"></div>
+    
+    <div id="creatorArea">
+        <textarea id="textInput" placeholder="پیام آشتی رو اینجا بنویس..."></textarea><br>
+        <button id="magic-btn" onclick="makeLink()">ساخت لینک جادویی ✨</button>
+        <p id="resultLink" style="font-size: 10px; color: #38bdf8; margin-top: 10px; word-break: break-all;"></p>
+    </div>
+</div>
+
+<audio id="music" src="music.mp3" loop></audio>
+
+<script>
+    const hash = window.location.hash.substring(1);
+    
+    function start() {
+        document.getElementById('intro-page').style.display = 'none';
+        document.getElementById('mainBox').style.display = 'block';
         
         if (hash) {
-            try { fullText = decodeURIComponent(escape(atob(hash))); } catch(e) { console.log("Error decoding"); }
+            // حالت نمایش پیام برای دوستت
+            document.getElementById('creatorArea').style.display = 'none';
+            const message = decodeURIComponent(escape(atob(hash)));
+            document.getElementById('textDisplay').innerText = message;
+            document.getElementById('music').play().catch(err => console.log("Music blocked"));
         }
+    }
 
-        function startMagic() {
-            document.getElementById('intro-page').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('intro-page').style.display = 'none';
-                const container = document.getElementById('mainContainer');
-                container.classList.add('show-box');
-                
-                if (fullText) {
-                    document.getElementById('textInput').style.display = "none";
-                    document.getElementById('mainBtn').style.display = "none";
-                    document.getElementById('bgMusic').play().catch(() => {});
-                    typeWriter();
-                    setInterval(createHeart, 300);
-                }
-            }, 1000);
-        }
+    function makeLink() {
+        const val = document.getElementById('textInput').value;
+        const encoded = btoa(unescape(encodeURIComponent(val)));
+        const finalLink = window.location.origin + window.location.pathname + "#" + encoded;
+        document.getElementById('resultLink').innerText = finalLink;
+        alert("لینک کپی شد!");
+    }
+</script>
 
-        function typeWriter() {
-            if (index < fullText.length) {
-                document.getElementById("typing-text").innerHTML += fullText.charAt(index);
-                index++; setTimeout(typeWriter, 50);
-            }
-        }
-
-        function createHeart() {
-            const h = document.createElement('div');
-            h.className = 'heart';
-            h.innerHTML = '🥺'; h.style.left = Math.random() * 100 + 'vw';
-            document.getElementById('heart-container').appendChild(h);
-            setTimeout(() => h.remove(), 5000);
-        }
-
-        function process() {
-            const txt = document.getElementById('textInput').value;
-            if(!txt) return;
-            const b64 = btoa(unescape(encodeURIComponent(txt)));
-            const link = window.location.origin + window.location.pathname + "#" + b64;
-            const out = document.getElementById('linkOutput');
-            out.style.display = 'block'; out.innerText = link;
-            navigator.clipboard.writeText(link);
-            alert("لینک کپی شد!");
-        }
-    </script>
 </body>
 </html>
