@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Surprise</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #050810; overflow: hidden; color: #fff; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
+        
+        /* صفحه ورودی سینمایی */
+        #intro-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #050810; z-index: 200; display: flex; justify-content: center; align-items: center; transition: opacity 1.5s; }
+        #intro-btn { background: none; border: 2px solid rgba(255, 255, 255, 0.4); color: rgba(255, 255, 255, 0.7); padding: 15px 40px; font-size: 18px; border-radius: 50px; cursor: pointer; transition: 0.3s; }
+        #intro-btn:hover { border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1); }
+
+        /* ذرات معلق پس‌زمینه */
+        #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        .container { 
+            width: 85%; max-width: 420px; background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(25px); border-radius: 35px; border: 1px solid rgba(255, 255, 255, 0.08); 
+            padding: 40px; text-align: center; z-index: 10; opacity: 0; transform: translateY(20px); transition: 1.5s; 
+        }
+        .container.show { opacity: 1; transform: translateY(0); }
+
+        .profile-img { width: 130px; height: 130px; border-radius: 50%; margin: 0 auto 20px; display: none; object-fit: cover; border: 3px solid #38bdf8; box-shadow: 0 0 30px rgba(56, 189, 248, 0.3); }
+        
+        #typing-text { font-size: 18px; line-height: 1.7; color: rgba(255, 255, 255, 0.9); min-height: 100px; margin-bottom: 20px; }
+        
+        textarea { width: 100%; height: 120px; background: rgba(0, 0, 0, 0.3); border-radius: 15px; color: #fff; padding: 15px; border: 1px solid rgba(56, 189, 248, 0.2); resize: none; outline: none; font-size: 15px; margin-bottom: 10px; }
+        
+        .btn { width: 100%; padding: 16px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; background: linear-gradient(90deg, #38bdf8, #818cf8); color: #0f172a; font-size: 14px; }
+        
+        #heart-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        .heart { position: absolute; font-size: 22px; animation: fall linear infinite; opacity: 0.8; }
+        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); } 100% { transform: translateY(110vh) rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="intro-page"><button id="intro-btn" onclick="startMagic()">OPEN YOUR GIFT 🎁</button></div>
+    <canvas id="particles"></canvas>
+    <div id="heart-container"></div>
+    <div class="container" id="mainContainer">
+        <img id="userImg" src="photo.jpg" class="profile-img">
+        <h1 style="color: #38bdf8;">FOR YOU... 🥺</h1>
+        <div id="typing-text"></div>
+        <textarea id="textInput" placeholder="پیام آشتی خودت رو اینجا بنویس..."></textarea>
+        <button id="mainBtn" class="btn" onclick="process()">CREATE MAGIC LINK ✨</button>
+        <div id="linkOutput" style="display:none; margin-top:20px; font-size:11px; color:#bae6fd; word-break:break-all; border:1px dashed #38bdf8; padding:10px; border-radius:10px;"></div>
+    </div>
+
+    <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
+
+    <script>
+        let fullText = ""; let index = 0;
+        window.onload = function() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                try {
+                    fullText = decodeURIComponent(escape(atob(hash)));
+                    document.getElementById('textInput').style.display = "none";
+                    document.getElementById('mainBtn').style.display = "none";
+                } catch(e) {}
+            } else {
+                document.getElementById('intro-page').style.display = "none";
+                document.getElementById('mainContainer').classList.add('show');
+            }
+            initParticles();
+        }
+
+        function startMagic() {
+            document.getElementById('intro-page').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('intro-page').style.display = 'none';
+                document.getElementById('mainContainer').classList.add('show');
+                document.getElementById('userImg').style.display = "block";
+                document.getElementById('bgMusic').play();
+                typeWriter();
+                setInterval(createHeart, 250);
+            }, 1000);
+        }
+
+        function typeWriter() {
+            if (index < fullText.length) {
+                document.getElementById("typing-text").innerHTML += fullText.charAt(index);
+                index++; setTimeout(typeWriter, 50);
+            }
+        }
+
+        function createHeart() {
+            const container = document.getElementById('heart-container');
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            const emojis = ['🥺', '💖', '✨', '🩹', '🤍', '🌹'];
+            heart.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = Math.random() * 3 + 5 + 's';
+            container.appendChild(heart);
+            setTimeout(() => { heart.remove(); }, 7000);
+        }
+
+        function initParticles() {
+            const canvas = document.getElementById('particles');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let pArray = [];
+            for (let i = 0; i < 100; i++) {
+                pArray.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5, o: Math.random()*0.5 });
+            }
+            function anim() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                pArray.forEach(p => {
+                    ctx.fillStyle = rgba(255,255,255,${p.o}); ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+                    p.y -= 0.2; if(p.y < 0) p.y = canvas.height;
+                });
+                requestAnimationFrame(anim);
+            }
+            anim();
+        }
+
+        function process() {
+            const txt = document.getElementById('textInput').value;
+            if (!txt) return;
+            const b64 = btoa(unescape(encodeURIComponent(txt)));
+            const link = window.location.origin + window.location.pathname + "#" + b64;
+            const out = document.getElementById('linkOutput');
+            out.style.display = 'block'; out.innerText = link;
+            navigator.clipboard.writeText(link);
+            alert("لینک کپی شد!");
+        }
+    </script>
+</body>
+</html>
