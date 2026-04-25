@@ -3,60 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Special Gift</title>
+    <title>A Special Surprise</title>
     <style>
-        body { margin: 0; background: #050810; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #intro-page { position: fixed; width: 100%; height: 100%; background: #050810; display: flex; justify-content: center; align-items: center; z-index: 100; }
-        #intro-btn { background: #38bdf8; color: black; border: none; padding: 15px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; }
-        .container { text-align: center; display: none; padding: 20px; }
-        .profile-img { width: 150px; height: 150px; border-radius: 50%; border: 3px solid #38bdf8; margin-bottom: 20px; }
-        textarea { width: 280px; height: 100px; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
-        #magic-btn { background: #818cf8; border: none; padding: 10px 20px; border-radius: 20px; color: white; cursor: pointer; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #050810; overflow: hidden; color: #fff; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
+        #intro-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #050810; z-index: 200; display: flex; justify-content: center; align-items: center; transition: opacity 1s; }
+        #intro-btn { background: none; border: 2px solid #38bdf8; color: #38bdf8; padding: 15px 40px; font-size: 18px; border-radius: 50px; cursor: pointer; }
+        #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .container { width: 85%; max-width: 420px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); border-radius: 35px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 35px; text-align: center; z-index: 10; display: none; opacity: 0; transition: 1.5s; }
+        .show-box { display: block !important; opacity: 1 !important; }
+        .profile-img { width: 130px; height: 130px; border-radius: 50%; margin: 0 auto 20px; display: block; object-fit: cover; border: 3px solid #38bdf8; box-shadow: 0 0 30px rgba(56, 189, 248, 0.3); }
+        #typing-text { font-size: 18px; line-height: 1.7; color: rgba(255, 255, 255, 0.9); min-height: 80px; margin-bottom: 20px; }
+        textarea { width: 100%; height: 100px; background: rgba(0, 0, 0, 0.3); border-radius: 15px; color: #fff; padding: 15px; border: 1px solid rgba(56, 189, 248, 0.2); resize: none; outline: none; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 16px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; background: linear-gradient(90deg, #38bdf8, #818cf8); color: #0f172a; }
+        #heart-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        .heart { position: absolute; font-size: 22px; animation: fall linear infinite; opacity: 0.8; }
+        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); } 100% { transform: translateY(110vh) rotate(360deg); } }
     </style>
 </head>
 <body>
-
-<div id="intro-page">
-    <button id="intro-btn" onclick="start()">OPEN YOUR GIFT 🎁</button>
-</div>
-
-<div class="container" id="mainBox">
-    <img src="photo.jpg" class="profile-img">
-    <div id="textDisplay" style="font-size: 20px; margin-bottom: 20px;"></div>
-    
-    <div id="creatorArea">
-        <textarea id="textInput" placeholder="پیام آشتی رو اینجا بنویس..."></textarea><br>
-        <button id="magic-btn" onclick="makeLink()">ساخت لینک جادویی ✨</button>
-        <p id="resultLink" style="font-size: 10px; color: #38bdf8; margin-top: 10px; word-break: break-all;"></p>
+    <div id="intro-page"><button id="intro-btn" onclick="startMagic()">OPEN YOUR GIFT 🎁</button></div>
+    <canvas id="particles"></canvas>
+    <div id="heart-container"></div>
+    <div class="container" id="mainContainer">
+        <img src="photo.jpg" class="profile-img">
+        <h2 style="color: #38bdf8;">FOR YOU... 🥺</h2>
+        <div id="typing-text"></div>
+        <div id="creatorArea">
+            <textarea id="textInput" placeholder="پیام آشتی رو اینجا بنویس..."></textarea>
+            <button id="mainBtn" class="btn" onclick="process()">CREATE MAGIC LINK ✨</button>
+            <div id="linkOutput" style="display:none; margin-top:20px; font-size:11px; color:#bae6fd; word-break:break-all; border:1px dashed #38bdf8; padding:10px; border-radius:10px;"></div>
+        </div>
     </div>
-</div>
+    <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
 
-<audio id="music" src="music.mp3" loop></audio>
-
-<script>
-    const hash = window.location.hash.substring(1);
-    
-    function start() {
-        document.getElementById('intro-page').style.display = 'none';
-        document.getElementById('mainBox').style.display = 'block';
-        
+    <script>
+        let fullText = ""; let index = 0;
+        const hash = window.location.hash.substring(1);
         if (hash) {
-            // حالت نمایش پیام برای دوستت
-            document.getElementById('creatorArea').style.display = 'none';
-            const message = decodeURIComponent(escape(atob(hash)));
-            document.getElementById('textDisplay').innerText = message;
-            document.getElementById('music').play().catch(err => console.log("Music blocked"));
+            try { fullText = decodeURIComponent(escape(atob(hash))); document.getElementById('creatorArea').style.display = "none"; } catch(e) {}
         }
-    }
-
-    function makeLink() {
-        const val = document.getElementById('textInput').value;
-        const encoded = btoa(unescape(encodeURIComponent(val)));
-        const finalLink = window.location.origin + window.location.pathname + "#" + encoded;
-        document.getElementById('resultLink').innerText = finalLink;
-        alert("لینک کپی شد!");
-    }
-</script>
-
+        function startMagic() {
+            document.getElementById('intro-page').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('intro-page').style.display = 'none';
+                document.getElementById('mainContainer').classList.add('show-box');
+                document.getElementById('bgMusic').play().catch(e => console.log("Audio play blocked"));
+                if (fullText) { typeWriter(); setInterval(createHeart, 300); }
+                initParticles();
+            }, 1000);
+        }
+        function typeWriter() {
+            if (index < fullText.length) {
+                document.getElementById("typing-text").innerHTML += fullText.charAt(index);
+                index++; setTimeout(typeWriter, 50);
+            }
+        }
+        function createHeart() {
+            const h = document.createElement('div'); h.className = 'heart';
+            const em = ['🥺', '💖', '✨', '🩹', '🤍', '🌹'];
+            h.innerHTML = em[Math.floor(Math.random() * em.length)];
+            h.style.left = Math.random() * 100 + 'vw';
+            h.style.animationDuration = Math.random() * 3 + 4 + 's';
+            document.getElementById('heart-container').appendChild(h);
+            setTimeout(() => h.remove(), 6000);
+        }
+        function initParticles() {
+            const canvas = document.getElementById('particles'); const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let pArray = [];
+            for (let i = 0; i < 70; i++) { pArray.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5, o: Math.random()*0.5 }); }
+            function anim() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                pArray.forEach(p => {
+                    ctx.fillStyle = rgba(255,255,255,${p.o}); ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+                    p.y -= 0.3; if(p.y < 0) p.y = canvas.height;
+                });
+                requestAnimationFrame(anim);
+            }
+            anim();
+        }
+        function process() {
+            const txt = document.getElementById('textInput').value; if (!txt) return;
+            const b64 = btoa(unescape(encodeURIComponent(txt)));
+            const link = window.location.origin + window.location.pathname + "#" + b64;
+            const out = document.getElementById('linkOutput');
+            out.style.display = 'block'; out.innerText = link;
+            navigator.clipboard.writeText(link); alert("لینک کپی شد!");
+        }
+    </script>
 </body>
 </html>
