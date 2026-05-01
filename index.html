@@ -5,23 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>برای تو...</title>
     <style>
-        body { margin: 0; background: #050810; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; }
-        #start-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #050810; z-index: 1000; display: flex; justify-content: center; align-items: center; }
-        .start-btn { background: #38bdf8; color: #000; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 18px; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
-        .container { text-align: center; width: 90%; max-width: 450px; background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); display: none; }
+        body { margin: 0; background: #050810; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; position: relative; }
+        .container { text-align: center; width: 90%; max-width: 450px; background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); z-index: 10; margin-bottom: 60px; }
         .profile-img { width: 100%; height: auto; max-height: 350px; border-radius: 15px; object-fit: cover; margin-bottom: 20px; border: 2px solid #38bdf8; }
         #typing-text { font-size: 19px; line-height: 1.8; margin-bottom: 20px; direction: rtl; min-height: 50px; }
-        textarea { width: 100%; height: 80px; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid #38bdf8; box-sizing: border-box; font-family: inherit; }
+        
+        /* دکمه پخش آهنگ در پایین صفحه */
+        .music-control { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; }
+        .music-btn { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #38bdf8; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-size: 14px; backdrop-filter: blur(5px); transition: 0.3s; }
+        .music-btn:hover { background: #38bdf8; color: #000; }
+
+        #creatorArea { margin-top: 20px; }
+        textarea { width: 100%; height: 80px; border-radius: 10px; padding: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid #38bdf8; box-sizing: border-box; margin-bottom: 10px; }
         .magic-btn { background: #38bdf8; border: none; padding: 12px 25px; border-radius: 25px; color: #000; font-weight: bold; cursor: pointer; width: 100%; }
-        .heart { position: absolute; font-size: 20px; animation: fall 4s linear infinite; pointer-events: none; z-index: 500; }
+        .heart { position: absolute; font-size: 20px; animation: fall 4s linear infinite; pointer-events: none; }
         @keyframes fall { 0% { transform: translateY(-10vh); opacity: 1; } 100% { transform: translateY(110vh); opacity: 0; } }
     </style>
 </head>
 <body>
-
-<div id="start-overlay">
-    <button class="start-btn" onclick="init()">ورود به صفحه 🎁</button>
-</div>
 
 <div class="container" id="mainBox">
     <img src="photo.jpg" class="profile-img">
@@ -34,6 +35,10 @@
     </div>
 </div>
 
+<div class="music-control" id="musicBar" style="display: none;">
+    <button class="music-btn" onclick="toggleMusic()" id="btnText">پخش آهنگ 🎧</button>
+</div>
+
 <audio id="bgMusic" loop>
     <source src="music.mp3" type="audio/mpeg">
 </audio>
@@ -42,25 +47,16 @@
     const hash = window.location.hash.substring(1);
     let index = 0;
     let fullText = "";
+    const audio = document.getElementById('bgMusic');
 
     if (hash) {
         try {
             fullText = decodeURIComponent(escape(atob(hash)));
             document.getElementById('creatorArea').style.display = 'none';
-        } catch(e) { console.log("Error decoding"); }
-    }
-
-    function init() {
-        document.getElementById('start-overlay').style.display = 'none';
-        document.getElementById('mainBox').style.display = 'block';
-        
-        const audio = document.getElementById('bgMusic');
-        audio.play().catch(err => alert("آهنگ لود نشد! اسم فایل رو چک کن."));
-
-        if (fullText) {
+            document.getElementById('musicBar').style.display = 'block';
             typeWriter();
             setInterval(createHeart, 500);
-        }
+        } catch(e) { console.log("Error"); }
     }
 
     function typeWriter() {
@@ -68,6 +64,16 @@
             document.getElementById("typing-text").innerHTML += fullText.charAt(index);
             index++;
             setTimeout(typeWriter, 60);
+        }
+    }
+
+    function toggleMusic() {
+        if (audio.paused) {
+            audio.play();
+            document.getElementById('btnText').innerText = "توقف آهنگ ⏸️";
+        } else {
+            audio.pause();
+            document.getElementById('btnText').innerText = "پخش آهنگ 🎧";
         }
     }
 
@@ -86,7 +92,7 @@
         const encoded = btoa(unescape(encodeURIComponent(val)));
         const finalLink = window.location.origin + window.location.pathname + "#" + encoded;
         document.getElementById('resultLink').innerText = finalLink;
-        alert("لینک کپی شد!");
+        alert("لینک ساخته شد!");
     }
 </script>
 
